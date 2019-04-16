@@ -20,5 +20,18 @@ namespace AutoRef
 
             return false;
         }
+
+        public static bool EndWithAny(this string source, IEnumerable<string> strings)
+        {
+            foreach (var valueToCheck in strings)
+            {
+                if (source.EndsWith(valueToCheck))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

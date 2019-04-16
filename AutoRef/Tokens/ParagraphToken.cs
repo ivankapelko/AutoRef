@@ -38,7 +38,7 @@ namespace AutoRef.Tokens
             {
                 words.AddRange(sentence.ListOfWord);
             }
-            if(words.Where(w=> w.Lemma == lemma).Count()>1)
+            if(words.Where(w=> w.Lemma == lemma).Count()!=0)
             {
                 return true;
             }

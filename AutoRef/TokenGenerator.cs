@@ -17,6 +17,9 @@ namespace AutoRef
         public static Dictionary<string, WordCounter> BagOfLemm;
         public static int SentenceCount { get; set; }
         public static int WordTokenCount { get; set; }
+        private List<string> _numbersList;
+        private List<string> _markerList;
+        private List<string> _picturesandtablesList;
         RemoveStopWords _rsw;
         RusStemmer _rusStemmer;
         public static List<ParagraphToken> ParagraphTokens
@@ -33,9 +36,13 @@ namespace AutoRef
         }
         public TokenGenerator(string text)
         {
+
             _paragraphTokens = new List<ParagraphToken>();
             SentenceCount = 0;
             WordTokenCount = 0;
+            _numbersList = new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+            _markerList = new List<string> { ":", ": " };
+            _picturesandtablesList = new List<string> { "Рис.", "Taбл." };
             BagOfLemm = new Dictionary<string, WordCounter> { };
             _rsw = new RemoveStopWords(@"e:\магистратура\AutoRef\RusStopWords.txt");
             _rusStemmer = new RusStemmer();
@@ -135,6 +142,16 @@ namespace AutoRef
         //}
         public string[] GetSentences(string text)
         {
+            var replacements = new[]{
+                new {Find="и т.д",Replace="и так далее"},
+                new {Find="т.е",Replace="то есть"},
+                new {Find="и т.п",Replace="и тому подобные"},
+            };
+            foreach (var set in replacements)
+            {
+                text = text.Replace(set.Find, set.Replace);
+            }
+            List<string> sentencesList = new List<string> { };
             string result = string.Join(" ", text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
             string[] tochka = { ". ", "? ", "! " };
             string[] sentences = result.Split(tochka, StringSplitOptions.RemoveEmptyEntries);
@@ -148,23 +165,24 @@ namespace AutoRef
             //RemoveTextHeader(text);
             List<string> paragraphs = text.Split(new[] { paragraphMarker },
                                             StringSplitOptions.RemoveEmptyEntries).ToList();
-            for (int i=0; i<paragraphs.Count;i++)
+            for (int i = 0; i < paragraphs.Count; i++)
             {
-                if (!paragraphs[i].StartsWithAny(new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9" })&&!paragraphs[i].EndsWith(":"))
+                //if()
+                if (!paragraphs[i].StartsWithAny(_numbersList) && !paragraphs[i].EndWithAny(_markerList))
                 {
                     result.Add(paragraphs[i]);
                     //paragraphs.Remove(paragraph);
 
                 }
-                if(paragraphs[i].EndsWith(":"))
+                if (paragraphs[i].EndWithAny(_markerList))
                 {
                     string newParagraph = paragraphs[i];
                     bool flag = true;
                     i++;
                     if (i != 0)
                     {
-                        
-                        while(flag)
+
+                        while (flag)
                         {
                             if (Char.IsLetter(paragraphs[i].FirstOrDefault()))
                             {
@@ -175,9 +193,9 @@ namespace AutoRef
                                 newParagraph += Environment.NewLine + paragraphs[i];
                                 i++;
                             }
-                            
-                            
-                        }                       
+
+
+                        }
                     }
                     result.Add(newParagraph);
                 }

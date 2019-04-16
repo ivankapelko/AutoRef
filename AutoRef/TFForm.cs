@@ -20,6 +20,7 @@ namespace AutoRef
         {
             InitializeComponent();
             //_wordTF = wordTF;
+            _percentcomboBox.SelectedIndex = 1;
             CalculateTFForWordToken();
             TokenGenerator.CalculateValueForSentence?.Invoke();
             TokenGenerator.CalculateValueForParagraphs?.Invoke();
@@ -75,7 +76,7 @@ namespace AutoRef
                 for (int i = 0; i < paragraph.ListOfSentence.Count; i++)
                     wordTokens.AddRange(paragraph.ListOfSentence[i].ListOfWord);
             }
-            var list = wordTokens.GroupBy(w => w.Lemma).Select(g => g.First()).ToList();;
+            var list = wordTokens.GroupBy(w => w.Lemma).Select(g => g.First()).ToList(); ;
             foreach (WordToken word in list)
             {
                 dataGridView1.Rows.Add(String.Format("{0} ({1})", word.TextValue, word.Lemma), word.DoubleValue);
@@ -111,22 +112,47 @@ namespace AutoRef
                 for (int i = 0; i < paragraph.ListOfSentence.Count; i++)
                     wordTokens.AddRange(paragraph.ListOfSentence[i].ListOfWord);
             }
-            //foreach (ParagraphToken paragrapth in TokenGenerator.ParagraphTokens)
-            //{
-            foreach (var sentence in sentenceTokens)
+            foreach (var lemma in TokenGenerator.BagOfLemm)
             {
-                foreach (WordToken wordtoken in sentence.ListOfWord)
+                double countInText = lemma.Value.CountInAllText; //wordTokens.Where(w => wordtoken.Lemma == w.Lemma).Count();
+                double sentenceCount = lemma.Value.CountSentenceForThisWord;
+                int countParagrapth = 0;
+                foreach (var par in TokenGenerator.ParagraphTokens)
                 {
-                    wordtoken.CountInText = TokenGenerator.BagOfLemm[wordtoken.Lemma].CountInAllText; //wordTokens.Where(w => wordtoken.Lemma == w.Lemma).Count();
-                    wordtoken.SentenceCount = TokenGenerator.BagOfLemm[wordtoken.Lemma].CountSentenceForThisWord;//sentenceTokens.Where(w => wordtoken.Lemma == w.Lemma &&
-                                                                                                                 //w.NumberOfSentence == wordtoken.NumberOfSentence).Count();
-                    var countParagrapth = wordTokens.Where(w => w.ParagraphNumber == wordtoken.ParagraphNumber && w.Lemma == wordtoken.Lemma).Count();
-                    wordtoken.DoubleValue = (wordtoken.CountInText / TokenGenerator.WordTokenCount) *
-                        Math.Log10(TokenGenerator.ParagraphTokens.Count / countParagrapth);
-
+                    if(par.IsLemmaContainsInParagraph(lemma.Key))
+                    {
+                        countParagrapth++;
+                    }
                 }
-                //}
+                //var countParagrapth = wordTokens.Where(w => w.ParagraphNumber == wordtoken.ParagraphNumber && w.Lemma == wordtoken.Lemma).Count();
+                double doubleValue = (countInText / TokenGenerator.WordTokenCount) *
+                    Math.Log10((double)TokenGenerator.ParagraphTokens.Count / (double)countParagrapth);
+                var replacedTokens = wordTokens.Where(w => w.Lemma == lemma.Key);
+                foreach(WordToken wordToken in replacedTokens)
+                {
+                    wordToken.CountInText = countInText;
+                    wordToken.SentenceCount = sentenceCount;
+                    wordToken.DoubleValue = doubleValue;
+                }
             }
+            //foreach (var sentence in sentenceTokens)
+            //{
+            //    foreach (WordToken wordtoken in sentence.ListOfWord)
+            //    {
+            //        wordtoken.CountInText = TokenGenerator.BagOfLemm[wordtoken.Lemma].CountInAllText; //wordTokens.Where(w => wordtoken.Lemma == w.Lemma).Count();
+            //        wordtoken.SentenceCount = TokenGenerator.BagOfLemm[wordtoken.Lemma].CountSentenceForThisWord;
+            //        int countParagrapth = 0
+            //        foreach (var par in TokenGenerator.ParagraphTokens)
+            //        {
+
+            //        }
+            //        var countParagrapth = wordTokens.Where(w => w.ParagraphNumber == wordtoken.ParagraphNumber && w.Lemma == wordtoken.Lemma).Count();
+            //        wordtoken.DoubleValue = (wordtoken.CountInText / TokenGenerator.WordTokenCount) *
+            //            Math.Log10((double)TokenGenerator.ParagraphTokens.Count / (double)countParagrapth);
+
+            //    }
+                //}
+            //}
         }
 
         private void _paragraphShowButton_Click(object sender, EventArgs e)
@@ -147,6 +173,18 @@ namespace AutoRef
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             MessageBox.Show(dataGridView1[e.ColumnIndex, e.RowIndex].Value.ToString());
+        }
+
+        private void _showReferat_Click(object sender, EventArgs e)
+        {
+            int countShowParagraph = Convert.ToInt32(_percentcomboBox.SelectedItem) * TokenGenerator.ParagraphTokens.Count /100 ;
+            var resultParagraph = TokenGenerator.ParagraphTokens.OrderBy(p => p.DoubleValue).Take(countShowParagraph).OrderBy(p=>p.Number);
+            string referat = String.Empty;
+            foreach(var paragraph in resultParagraph)
+            {
+                referat += paragraph.TextValue + Environment.NewLine;
+            }
+            MessageBox.Show(referat);
         }
     }
 }
