@@ -196,6 +196,7 @@ namespace AutoRef
 
 
                         }
+                        i--;
                     }
                     result.Add(newParagraph);
                 }

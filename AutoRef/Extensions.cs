@@ -10,9 +10,10 @@ namespace AutoRef
     {
         public static bool StartsWithAny(this string source, IEnumerable<string> strings)
         {
+            string first = source.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length==0? String.Empty: source.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[0];
             foreach (var valueToCheck in strings)
             {
-                if (source.StartsWith(valueToCheck))
+                if (first.StartsWith(valueToCheck))
                 {
                     return true;
                 }

@@ -126,6 +126,8 @@
             this._percentcomboBox.FormattingEnabled = true;
             this._percentcomboBox.Items.AddRange(new object[] {
             "15",
+            "20",
+            "25",
             "30",
             "50"});
             this._percentcomboBox.Location = new System.Drawing.Point(389, 14);
